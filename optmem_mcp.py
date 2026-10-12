@@ -23,6 +23,7 @@ INSTALL = "curl -fsSL https://raw.githubusercontent.com/VictorTaelin/OptMem/main
 # The CLI's output tells the agent which shell command to run next; point it at the tools instead.
 NAP_COMMAND = re.compile(r'^Run: .* nap (\S+) "<your line>"$', re.MULTILINE)
 NOTE_HINT = re.compile(r"Record the first with: .*")
+AWAKE = re.compile(r"^You are awake\.\n?", re.MULTILINE)  # CLI ritual line; models mistake it for a memory
 
 mcp = FastMCP(
     "optmem",
@@ -51,6 +52,7 @@ def _memo(*args: str) -> str:
     output = (result.stdout + result.stderr).strip()
     if result.returncode != 0:
         raise RuntimeError(output)
+    output = AWAKE.sub("", output).strip()
     output = NOTE_HINT.sub("Store one with remember_fact.", output)
     return NAP_COMMAND.sub(r'Do it now: call summarize_memory_block(block_id="\1", summary="<your line>").', output)
 
